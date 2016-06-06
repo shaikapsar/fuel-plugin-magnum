@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Add here any the actions which are required before plugin build
+# like packages building, packages downloading from mirrors and so on.
+# The script should return 0 if there were no errors.
+
+set -eux
+
+. "$(dirname "$(readlink -f "$0")")"/functions.sh
+
+
+# Packages needed for OpenStack Magnum services from stable/mitaka.
+#download_package http://ubuntu-cloud.archive.canonical.com/ubuntu/pool/main/m/magnum/python-magnum_2.0.0-4ubuntu1~cloud0_all.deb \
+#http://ubuntu-cloud.archive.canonical.com/ubuntu/pool/main/m/magnum/magnum-common_2.0.0-4ubuntu1~cloud0_all.deb \
+#http://ubuntu-cloud.archive.canonical.com/ubuntu/pool/main/m/magnum/magnum-api_2.0.0-4ubuntu1~cloud0_all.deb \
+#http://ubuntu-cloud.archive.canonical.com/ubuntu/pool/main/m/magnum/magnum-conductor_2.0.0-4ubuntu1~cloud0_all.deb
+
+
+# Puppet modules needed for OpenStack Magnum services from master.
+MAGNUM_REF="master"
+MAGNUM_TARBALL_URL="https://github.com/openstack/puppet-magnum/archive/${MAGNUM_REF}.tar.gz"
+
+download_puppet_module "magnum" ${MAGNUM_TARBALL_URL}

@@ -1,0 +1,114 @@
+
+# These tasks will be merged into deployment graph. Here you
+# can specify new tasks for any roles, even built-in ones.
+
+- id: primary-standard-magnum
+  type: group
+  role: [primary-standard-magnum]
+  requires: [deploy_start]
+  required_for: [deploy_end]
+  tasks: &common_tasks
+    - hiera
+    - setup_repositories
+    - fuel_pkgs
+    - globals
+    - tools
+    - logging
+    - netconfig
+    - hosts
+    - firewall
+    - ssl-keys-saving
+    - ssl-add-trust-chain
+    - ssl-dns-setup
+  parameters:
+    strategy:
+      type: one_by_one
+
+- id: standard-magnum
+  type: group
+  role: [standard-magnum]
+  requires: [primary-standard-magnum]
+  required_for: [deploy_end]
+  tasks: *common_tasks
+  parameters:
+    strategy:
+      type: parallel
+
+- id: magnum-firewall
+  version: 2.0.0
+  type: puppet
+  groups: [primary-standard-magnum, standard-magnum]
+  requires: [firewall]
+  required_for: [magnum]
+  cross-depends:
+    - name: firewall
+  parameters:
+    puppet_manifest: puppet/modules/caas_magnum/modular/firewall.pp
+    puppet_modules: /etc/puppet/modules:puppet/modules
+    timeout: 3600
+
+- id: magnum-db
+  version: 2.0.0
+  type: puppet
+  groups: [primary-controller]
+  requires: [primary-database, database]
+  required_for: [magnum]
+  cross-depends:
+   - name: /(primary-)?database/
+  parameters:
+    puppet_manifest: puppet/modules/caas_magnum/modular/db.pp
+    puppet_modules: /etc/puppet/modules:puppet/modules
+    timeout: 1800
+  # reexecute_on is needed for scale-down operations
+  reexecute_on:
+    - deploy_changes
+
+- id: magnum-keystone
+  version: 2.0.0
+  type: puppet
+  groups: [primary-controller]
+  requires: [primary-keystone, keystone]
+  required_for: [magnum]
+  cross-depends:
+    - name: /(primary-)?keystone/
+  parameters:
+    puppet_manifest: puppet/modules/caas_magnum/modular/keystone.pp
+    puppet_modules: /etc/puppet/modules:puppet/modules
+    timeout: 1800
+  # reexecute_on is needed for scale-down operations
+  reexecute_on:
+    - deploy_changes
+
+- id: openstack-haproxy-magnum
+  type: puppet
+  version: 2.0.0
+  groups: [primary-controller, controller]
+  requires: [primary-cluster-haproxy, cluster-haproxy]
+  required_for: [magnum]
+  cross-depends:
+    - name: /(primary-)?cluster-haproxy/
+  parameters:
+    puppet_manifest: puppet/modules/caas_magnum/modular/openstack-haproxy-magnum.pp
+    puppet_modules: /etc/puppet/modules:puppet/modules
+    timeout: 3600
+  # reexecute_on is needed for scale-down operations
+  reexecute_on:
+    - deploy_changes
+
+- id: magnum
+  version: 2.0.0
+  type: puppet
+  groups: [primary-standard-magnum, standard-magnum]
+  requires: [magnum-db, magnum-keystone, openstack-haproxy-magnum]
+  required_for: [deploy_end]
+  cross-depends:
+    - name: magnum-db
+    - name: magnum-keystone
+    - name: openstack-haproxy-magnum
+  cross-depended-by:
+   - name: deploy_end
+  parameters:
+    puppet_manifest: puppet/modules/caas_magnum/modular/magnum.pp
+    puppet_modules: /etc/puppet/modules:puppet/modules
+    timeout: 1800
+

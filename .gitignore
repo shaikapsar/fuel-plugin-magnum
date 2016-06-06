@@ -1,0 +1,6 @@
+.tox
+.build
+*.pyc
+*.rpm
+deployment_scripts/puppet/modules/magnum/*
+repositories/ubuntu/*.deb
