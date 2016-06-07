@@ -79,6 +79,22 @@
   reexecute_on:
     - deploy_changes
 
+- id: magnum-rabbitmq
+  version: 2.0.0
+  type: puppet
+  groups: [primary-controller]
+  requires: [primary-rabbitmq, rabbitmq]
+  required_for: [magnum]
+  cross-depends:
+    - name: /(primary-)?rabbitmq/
+  parameters:
+    puppet_manifest: puppet/modules/caas_magnum/modular/rabbitmq.pp
+    puppet_modules: /etc/puppet/modules:puppet/modules
+    timeout: 1800
+  # reexecute_on is needed for scale-down operations
+  reexecute_on:
+    - deploy_changes
+
 - id: openstack-haproxy-magnum
   type: puppet
   version: 2.0.0
@@ -99,11 +115,12 @@
   version: 2.0.0
   type: puppet
   groups: [primary-standard-magnum, standard-magnum]
-  requires: [magnum-db, magnum-keystone, openstack-haproxy-magnum]
+  requires: [magnum-db, magnum-keystone, magnum-rabbitmq, openstack-haproxy-magnum]
   required_for: [deploy_end]
   cross-depends:
     - name: magnum-db
     - name: magnum-keystone
+    - name: magnum-rabbitmq
     - name: openstack-haproxy-magnum
   cross-depended-by:
    - name: deploy_end
