@@ -10,10 +10,10 @@ set -eux
 
 
 # Packages needed for OpenStack Magnum services from stable/mitaka.
-#download_package http://ubuntu-cloud.archive.canonical.com/ubuntu/pool/main/m/magnum/python-magnum_2.0.0-4ubuntu1~cloud0_all.deb \
-#http://ubuntu-cloud.archive.canonical.com/ubuntu/pool/main/m/magnum/magnum-common_2.0.0-4ubuntu1~cloud0_all.deb \
-#http://ubuntu-cloud.archive.canonical.com/ubuntu/pool/main/m/magnum/magnum-api_2.0.0-4ubuntu1~cloud0_all.deb \
-#http://ubuntu-cloud.archive.canonical.com/ubuntu/pool/main/m/magnum/magnum-conductor_2.0.0-4ubuntu1~cloud0_all.deb
+download_package http://ubuntu-cloud.archive.canonical.com/ubuntu/pool/main/m/magnum/python-magnum_2.0.0-4ubuntu1~cloud0_all.deb \
+http://ubuntu-cloud.archive.canonical.com/ubuntu/pool/main/m/magnum/magnum-common_2.0.0-4ubuntu1~cloud0_all.deb \
+http://ubuntu-cloud.archive.canonical.com/ubuntu/pool/main/m/magnum/magnum-api_2.0.0-4ubuntu1~cloud0_all.deb \
+http://ubuntu-cloud.archive.canonical.com/ubuntu/pool/main/m/magnum/magnum-conductor_2.0.0-4ubuntu1~cloud0_all.deb
 
 
 # Puppet modules needed for OpenStack Magnum services from master.
