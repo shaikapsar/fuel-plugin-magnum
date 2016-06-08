@@ -81,7 +81,7 @@ class magnum(
 ) {
 
   include ::magnum::params
-  include ::magnum::logging
+#  include ::magnum::logging
   include ::magnum::policy
   include ::magnum::db
 

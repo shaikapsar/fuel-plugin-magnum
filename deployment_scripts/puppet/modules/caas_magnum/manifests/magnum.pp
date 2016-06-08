@@ -81,6 +81,11 @@ class caas_magnum::magnum {
 
     class { '::magnum::client': }
 
+    class { '::magnum::logging':
+      debug   => $debug,
+      verbose => $verbose,
+    }
+
     class { '::magnum::db':
       database_connection => $sql_connection,
     }
