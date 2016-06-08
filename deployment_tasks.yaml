@@ -2,9 +2,9 @@
 # These tasks will be merged into deployment graph. Here you
 # can specify new tasks for any roles, even built-in ones.
 
-- id: primary-standard-magnum
+- id: primary-magnum
   type: group
-  role: [primary-standard-magnum]
+  role: [primary-magnum]
   requires: [deploy_start]
   required_for: [deploy_end]
   tasks: &common_tasks
@@ -24,10 +24,10 @@
     strategy:
       type: one_by_one
 
-- id: standard-magnum
+- id: magnum
   type: group
-  role: [standard-magnum]
-  requires: [primary-standard-magnum]
+  role: [magnum]
+  requires: [primary-magnum]
   required_for: [deploy_end]
   tasks: *common_tasks
   parameters:
@@ -37,9 +37,9 @@
 - id: magnum-firewall
   version: 2.0.0
   type: puppet
-  groups: [primary-standard-magnum, standard-magnum]
+  groups: [primary-magnum, magnum]
   requires: [firewall]
-  required_for: [magnum]
+  required_for: [magnum-service]
   cross-depends:
     - name: firewall
   parameters:
@@ -52,7 +52,7 @@
   type: puppet
   groups: [primary-controller]
   requires: [primary-database, database]
-  required_for: [magnum]
+  required_for: [magnum-service]
   cross-depends:
    - name: /(primary-)?database/
   parameters:
@@ -68,7 +68,7 @@
   type: puppet
   groups: [primary-controller]
   requires: [primary-keystone, keystone]
-  required_for: [magnum]
+  required_for: [magnum-service]
   cross-depends:
     - name: /(primary-)?keystone/
   parameters:
@@ -84,7 +84,7 @@
   type: puppet
   groups: [primary-controller]
   requires: [primary-rabbitmq, rabbitmq]
-  required_for: [magnum]
+  required_for: [magnum-service]
   cross-depends:
     - name: /(primary-)?rabbitmq/
   parameters:
@@ -100,7 +100,7 @@
   version: 2.0.0
   groups: [primary-controller, controller]
   requires: [primary-cluster-haproxy, cluster-haproxy]
-  required_for: [magnum]
+  required_for: [magnum-service]
   cross-depends:
     - name: /(primary-)?cluster-haproxy/
   parameters:
@@ -111,10 +111,10 @@
   reexecute_on:
     - deploy_changes
 
-- id: magnum
+- id: magnum-service
   version: 2.0.0
   type: puppet
-  groups: [primary-standard-magnum, standard-magnum]
+  groups: [primary-magnum, magnum]
   requires: [magnum-db, magnum-keystone, magnum-rabbitmq, openstack-haproxy-magnum]
   required_for: [deploy_end]
   cross-depends:

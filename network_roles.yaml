@@ -1,7 +1,7 @@
 # Unique network role name
 - id: "magnum/api"
   # Role mapping to network
-  default_mapping: "public"
+  default_mapping: "management"
   properties:
     # Should be true if network role requires subnet being set
     subnet: true

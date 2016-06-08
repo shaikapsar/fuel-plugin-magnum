@@ -38,15 +38,15 @@ class caas_magnum::openstack_haproxy_magnum {
     $internal_ssl_path  = get_ssl_property($ssl_hash, {}, 'magnum', 'internal', 'path', [''])
 
     $external_lb        = hiera('external_lb', false)
-    $magnum_nodes        = get_nodes_hash_by_roles($network_metadata, ['primary-standard-magnum', 'standard-magnum'])
+    $magnum_nodes       = get_nodes_hash_by_roles($network_metadata, ['primary-magnum', 'magnum'])
 
-    $magnum_api_port      = hiera($magnum['magnum_api_port'], 9511)
+    $magnum_api_port    = hiera($magnum['magnum_api_port'], 9511)
 
     if (!$external_lb) {
 
-      $magnum_address_map   = get_node_to_ipaddr_map_by_network_role($magnum_nodes, 'magnum/api')
-      $server_names        = hiera_array('magnum_names', keys($magnum_address_map))
-      $ipaddresses         = hiera_array('magnum_ipaddresses', values($magnum_address_map))
+      $magnum_address_map  = get_node_to_ipaddr_map_by_network_role($magnum_nodes, 'magnum/api')
+      $server_names        = keys($magnum_address_map)
+      $ipaddresses         = values($magnum_address_map)
       $public_virtual_ip   = hiera('public_vip')
       $internal_virtual_ip = hiera('management_vip')
 
