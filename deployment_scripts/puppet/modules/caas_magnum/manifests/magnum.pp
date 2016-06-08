@@ -98,7 +98,7 @@ class caas_magnum::magnum {
     }
 
     class { '::magnum::api':
-      admin_password    => $identity_uri,
+      admin_password    => $admin_password,
       admin_user        => $admin_user,
       admin_tenant_name => $admin_tenant_name,
       auth_uri          => $auth_uri,
