@@ -20,4 +20,9 @@ http://ubuntu-cloud.archive.canonical.com/ubuntu/pool/main/m/magnum/magnum-condu
 MAGNUM_REF="master"
 MAGNUM_TARBALL_URL="https://github.com/openstack/puppet-magnum/archive/${MAGNUM_REF}.tar.gz"
 
-download_puppet_module "magnum" ${MAGNUM_TARBALL_URL}
+# Disabled module download. Upstream magnum puppet module break with MOS9.0.
+
+# https://review.openstack.org/#/c/313202/
+# https://review.openstack.org/#/c/313024/
+
+#download_puppet_module "magnum" ${MAGNUM_TARBALL_URL}
