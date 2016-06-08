@@ -133,5 +133,4 @@ class magnum::logging(
     'DEFAULT/instance_uuid_format':          value => $instance_uuid_format;
     'DEFAULT/log_date_format':               value => $log_date_format;
   }
-
- }
+}

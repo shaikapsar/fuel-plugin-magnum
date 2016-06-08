@@ -105,5 +105,11 @@ class caas_magnum::magnum {
 
     class { '::magnum::certificates': }
 
+    class { '::magnum::config':
+      magnum_config => {
+        'trust/trustee_domain_admin_password' => { value => $magnum['domain_password'] },
+      },
+    }
+
   }
 }
