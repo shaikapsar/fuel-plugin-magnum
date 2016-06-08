@@ -28,14 +28,13 @@ class caas_magnum::rabbitmq {
 
     $network_scheme  = hiera_hash('network_scheme')
 
-    $rabbit_username = hiera( $magnum['rabbit_user'], 'magnum')
+    $rabbit_username = hiera($magnum['rabbit_user'], 'magnum')
     $rabbit_password = $magnum['rabbit_password']
 
     rabbitmq_user { $rabbit_username :
       admin    => true,
       password => $rabbit_password,
       provider => 'rabbitmqctl',
-      require  => Class['::rabbitmq'],
     }
 
     rabbitmq_user_permissions { "${rabbit_username}@/":
@@ -43,7 +42,6 @@ class caas_magnum::rabbitmq {
       write_permission     => '.*',
       read_permission      => '.*',
       provider             => 'rabbitmqctl',
-      require              => Class['::rabbitmq'],
     }
 
   }

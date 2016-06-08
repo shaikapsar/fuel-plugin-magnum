@@ -62,7 +62,7 @@ class caas_magnum::openstack_haproxy_magnum {
       }
 
       openstack::ha::haproxy_service { 'magnum-api':
-        order                  => '305',
+        order                  => '511',
         listen_port            => $magnum_api_port,
         public_ssl             => $public_ssl,
         public_ssl_path        => $public_ssl_path,

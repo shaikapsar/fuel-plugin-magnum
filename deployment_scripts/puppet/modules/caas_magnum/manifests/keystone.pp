@@ -66,7 +66,6 @@ class caas_magnum::keystone {
 
     Class['::osnailyfacter::wait_for_keystone_backends']
       -> Class['::magnum::keystone::auth']
-        -> Class['::magnum::keystone::domain']
 
     class {'::osnailyfacter::wait_for_keystone_backends': }
 
