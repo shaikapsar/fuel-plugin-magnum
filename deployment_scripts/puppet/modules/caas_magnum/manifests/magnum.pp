@@ -57,24 +57,33 @@ class caas_magnum::magnum {
     $admin_auth_address         = get_ssl_property($ssl_hash, {}, 'keystone', 'admin', 'hostname', [hiera('keystone_endpoint', ''), $service_endpoint, $management_vip])
     $identity_uri               = "${admin_auth_protocol}://${admin_auth_address}:35357/"
 
-    $public_protocol     = get_ssl_property($ssl_hash, $public_ssl_hash, 'magnum', 'public', 'protocol', 'http')
-    $public_address      = get_ssl_property($ssl_hash, $public_ssl_hash, 'magnum', 'public', 'hostname', [$public_vip])
+    $public_protocol            = get_ssl_property($ssl_hash, $public_ssl_hash, 'magnum', 'public', 'protocol', 'http')
+    $public_address             = get_ssl_property($ssl_hash, $public_ssl_hash, 'magnum', 'public', 'hostname', [$public_vip])
 
-    $internal_protocol   = get_ssl_property($ssl_hash, {}, 'magnum', 'internal', 'protocol', 'http')
-    $internal_address    = get_ssl_property($ssl_hash, {}, 'magnum', 'internal', 'hostname', [$management_vip])
+    $internal_protocol          = get_ssl_property($ssl_hash, {}, 'magnum', 'internal', 'protocol', 'http')
+    $internal_address           = get_ssl_property($ssl_hash, {}, 'magnum', 'internal', 'hostname', [$management_vip])
 
-    $admin_protocol      = get_ssl_property($ssl_hash, {}, 'magnum', 'admin', 'protocol', 'http')
-    $admin_address       = get_ssl_property($ssl_hash, {}, 'magnum', 'admin', 'hostname', [$management_vip])
+    $admin_protocol            = get_ssl_property($ssl_hash, {}, 'magnum', 'admin', 'protocol', 'http')
+    $admin_address             = get_ssl_property($ssl_hash, {}, 'magnum', 'admin', 'hostname', [$management_vip])
 
-    $public_url          = "${public_protocol}://${public_address}:${bind_port}/v1"
-    $internal_url        = "${internal_protocol}://${internal_address}:${bind_port}/v1"
-    $admin_url           = "${admin_protocol}://${admin_address}:${bind_port}/v1"
+    $magnum_endpoint_type      = pick($magnum['magnum_endpoint_type'], 'internalURL')
+    $heat_endpoint_type        = pick($magnum['heat_endpoint_type'], 'internalURL')
+    $glance_endpoint_type      = pick($magnum['glance_endpoint_type'], 'internalURL')
+    $barbican_endpoint_type    = pick($magnum['barbican_endpoint_type'], 'internalURL')
+    $nova_endpoint_type        = pick($magnum['nova_endpoint_type'], 'internalURL')
+    $cinder_endpoint_type      = pick($magnum['cinder_endpoint_type'], 'internalURL')
+    $neutron_endpoint_typ      = pick($magnum['neutron_endpoint_type'], 'internalURL')
 
-    $db_user        = pick($magnum['db_user'], 'magnum')
-    $db_name        = pick($magnum['db_name'], 'magnum')
-    $db_password    = $magnum['db_password']
-    $read_timeout   = '60'
-    $db_connection  = "mysql://${db_user}:${db_password}@${database_vip}/${db_name}?read_timeout=${read_timeout}"
+
+    $public_url                = "${public_protocol}://${public_address}:${bind_port}/v1"
+    $internal_url              = "${internal_protocol}://${internal_address}:${bind_port}/v1"
+    $admin_url                 = "${admin_protocol}://${admin_address}:${bind_port}/v1"
+
+    $db_user                   = pick($magnum['db_user'], 'magnum')
+    $db_name                   = pick($magnum['db_name'], 'magnum')
+    $db_password               = $magnum['db_password']
+    $read_timeout              = '60'
+    $db_connection             = "mysql://${db_user}:${db_password}@${database_vip}/${db_name}?read_timeout=${read_timeout}"
 
     $rabbit_username = hiera( $magnum['rabbit_user'], 'magnum')
     $rabbit_password = $magnum['rabbit_password']
@@ -96,12 +105,19 @@ class caas_magnum::magnum {
       rabbit_port            => $amqp_port,
       rabbit_userid          => $rabbit_username,
       rabbit_password        => $rabbit_password,
-      region_name            => $region,
       database_connection    => $db_connection,
       database_idle_timeout  => $idle_timeout,
       database_max_pool_size => $max_pool_size,
       database_max_overflow  => $max_overflow,
       database_max_retries   => $max_retries,
+      region_name            => $region,
+      magnum_endpoint_type   => $magnum_endpoint_type,
+      heat_endpoint_type     => $heat_endpoint_type,
+      glance_endpoint_type   => $glance_endpoint_type,
+      barbican_endpoint_type => $barbican_endpoint_type,
+      nova_endpoint_type     => $nova_endpoint_type,
+      cinder_endpoint_type   => $cinder_endpoint_type,
+      neutron_endpoint_type  => $neutron_endpoint_type,
     }
 
     class { '::magnum::api':

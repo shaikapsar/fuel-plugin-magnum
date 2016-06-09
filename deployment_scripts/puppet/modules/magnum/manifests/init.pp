@@ -88,11 +88,6 @@
 #  on some distributions.
 #  Defaults to $::os_service_default
 #
-# [*region_name*]
-#   (Optional) Region name for services. This is the
-#   default region name that heat talks to service endpoints on.
-#   Defaults to $::os_service_default.
-#
 # [*database_connection*]
 #   (Optional) Url used to connect to database.
 #   Defaults to "mysql://magnum:magnum@localhost:3306/magnum".
@@ -127,28 +122,74 @@
 #   before error is raised. Set to -1 to specify an infinite retry count.
 #   Defaults to $::os_service_default
 #
+# [*region_name*]
+#   (Optional) Region name for services. This is the
+#   default region name that heat talks to service endpoints on.
+#   Defaults to $::os_service_default
+#
+# [*magnum_endpoint_type*]
+#   (Optional) Type of endpoint in Identity service
+#   catalog to use for communication with the OpenStack
+#   service.
+#   Defaults to $::os_service_default
+#
+# [*heat_endpoint_type*]
+#   (Optional) Type of endpoint in Identity service
+#   catalog to use for communication with the OpenStack
+#   service.
+#   Defaults to $::os_service_default
+#
+# [*glance_endpoint_type*]
+#   (Optional) Type of endpoint in Identity service
+#   catalog to use for communication with the OpenStack
+#   service.
+#   Defaults to $::os_service_default
+#
+# [*barbican_endpoint_type*]
+#   (Optional) Type of endpoint in Identity service
+#   catalog to use for communication with the OpenStack
+#   service.
+#   Defaults to $::os_service_default
+#
+# [*nova_endpoint_type*]
+#   (Optional) Type of endpoint in Identity service
+#   catalog to use for communication with the OpenStack
+#   service.
+#   Defaults to $::os_service_default
+#
+# [*cinder_endpoint_type*]
+#   (Optional) Type of endpoint in Identity service
+#   catalog to use for communication with the OpenStack
+#   service.
+#   Defaults to $::os_service_default
+#
+# [*neutron_endpoint_type*]
+#   (Optional) Type of endpoint in Identity service
+#   catalog to use for communication with the OpenStack
+#   service.
+#   Defaults to $::os_service_default
+#
 class magnum(
-  $package_ensure          = 'present',
-  $verbose                 = undef,
-  $debug                   = undef,
-  $log_dir                 = undef,
-  $use_syslog              = undef,
-  $use_stderr              = undef,
-  $log_facility            = undef,
-  $notification_driver     = $::os_service_default,
-  $rpc_backend             = 'rabbit',
-  $rabbit_host             = $::os_service_default,
-  $rabbit_hosts            = $::os_service_default,
-  $rabbit_port             = $::os_service_default,
-  $rabbit_userid           = $::os_service_default,
-  $rabbit_virtual_host     = $::os_service_default,
-  $rabbit_password         = $::os_service_default,
-  $rabbit_use_ssl          = $::os_service_default,
-  $kombu_ssl_ca_certs      = $::os_service_default,
-  $kombu_ssl_certfile      = $::os_service_default,
-  $kombu_ssl_keyfile       = $::os_service_default,
-  $kombu_ssl_version       = $::os_service_default,
-  $region_name             = $::os_service_default,
+  $package_ensure      = 'present',
+  $verbose             = undef,
+  $debug               = undef,
+  $log_dir             = undef,
+  $use_syslog          = undef,
+  $use_stderr          = undef,
+  $log_facility        = undef,
+  $notification_driver = $::os_service_default,
+  $rpc_backend         = 'rabbit',
+  $rabbit_host         = $::os_service_default,
+  $rabbit_hosts        = $::os_service_default,
+  $rabbit_port         = $::os_service_default,
+  $rabbit_userid       = $::os_service_default,
+  $rabbit_virtual_host = $::os_service_default,
+  $rabbit_password     = $::os_service_default,
+  $rabbit_use_ssl      = $::os_service_default,
+  $kombu_ssl_ca_certs  = $::os_service_default,
+  $kombu_ssl_certfile  = $::os_service_default,
+  $kombu_ssl_keyfile   = $::os_service_default,
+  $kombu_ssl_version   = $::os_service_default,
   $database_connection     = undef,
   $database_idle_timeout   = $::os_service_default,
   $database_min_pool_size  = $::os_service_default,
@@ -157,6 +198,14 @@ class magnum(
   $database_retry_interval = $::os_service_default,
   $database_max_overflow   = $::os_service_default,
   $database_db_max_retries = $::os_service_default,
+  $region_name             = $::os_service_default,
+  $magnum_endpoint_type    = $::os_service_default,
+  $heat_endpoint_type      = $::os_service_default,
+  $glance_endpoint_type    = $::os_service_default,
+  $barbican_endpoint_type  = $::os_service_default,
+  $nova_endpoint_type      = $::os_service_default,
+  $cinder_endpoint_type    = $::os_service_default,
+  $neutron_endpoint_type   = $::os_service_default,
 ) {
 
   include ::magnum::params
@@ -207,5 +256,21 @@ class magnum(
     magnum_config { 'DEFAULT/rpc_backend': value => $rpc_backend }
   }
 
+   magnum_config {
+    'magnum_client/region_name' :       value => $region_name;
+    'magnum_client/endpoint_type' :     value => $magnum_endpoint_type;
+    'heat_client/region_name' :         value => $region_name;
+    'heat_client/endpoint_type' :       value => $heat_endpoint_type;
+    'glance_client/region_name' :       value => $region_name;
+    'glance_client/endpoint_type' :     value => $glance_endpoint_type;
+    'barbican_client/region_name' :     value => $region_name;
+    'barbican_client/endpoint_type' :   value => $barbican_endpoint_type;
+    'nova_client/region_name' :         value => $region_name;
+    'nova_client/endpoint_type' :       value => $nova_endpoint_type;
+    'cinder_client/region_name' :       value => $region_name;
+    'cinder_client/endpoint_type' :     value => $cinder_endpoint_type;
+    'neutron_client/region_name' :      value => $region_name;
+    'neutron_client/endpoint_type' :    value => $neutron_endpoint_type;
+   }
 
 }
