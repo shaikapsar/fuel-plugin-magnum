@@ -36,7 +36,8 @@ class magnum::policy (
 
   create_resources('openstacklib::policy::base', $policies)
 
-#  oslo::policy { 'magnum_config': policy_file => $policy_path}
+  magnum_config { 'oslo_policy/policy_file': value => $policy_path }
+#  oslo::policy { 'magnum_config': policy_file      => $policy_path}
 
 }
 
