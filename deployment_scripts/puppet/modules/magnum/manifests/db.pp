@@ -49,6 +49,17 @@ class magnum::db (
   $database_db_max_retries = $::os_service_default,
 ) {
 
+  # NOTE(shaikapsar): In order to keep backward compatibility we rely on the pick function
+  # to use magnum::<myparam> if magnum::db::<myparam> isn't specified.
+  $database_connection_real     = pick($::magnum::database_connection, $database_connection)
+  $database_idle_timeout_real   = pick($::magnum::database_idle_timeout, $database_idle_timeout)
+  $database_min_pool_size_real  = pick($::magnum::database_min_pool_size, $database_min_pool_size)
+  $database_max_pool_size_real  = pick($::magnum::database_max_pool_size, $database_max_pool_size)
+  $database_max_retries_real    = pick($::magnum::database_max_retries, $database_max_retries)
+  $database_retry_interval_real = pick($::magnum::database_retry_interval, $database_retry_interval)
+  $database_max_overflow_real   = pick($::magnum::database_max_overflow, $database_max_overflow)
+  $database_db_max_retries_real = pick($::magnum::database_db_max_retries, $database_db_max_retries)
+
   validate_re($database_connection,
     '^(mysql(\+pymysql)?|postgresql):\/\/(\S+:\S+@\S+\/\S+)?')
 
@@ -78,14 +89,14 @@ class magnum::db (
     }
   }
   magnum_config {
-    'database/connection':     value => $database_connection, secret => true;
-    'database/idle_timeout':   value => $database_idle_timeout;
-    'database/min_pool_size':  value => $database_min_pool_size;
-    'database/max_retries':    value => $database_max_retries;
-    'database/retry_interval': value => $database_retry_interval;
-    'database/max_pool_size':  value => $database_max_pool_size;
-    'database/max_overflow':   value => $database_max_overflow;
+    'database/connection':              value => $database_connection_real, secret => true;
+    'database/idle_timeout':            value => $database_idle_timeout_real;
+    'database/min_pool_size':           value => $database_min_pool_size_real;
+    'database/max_retries':             value => $database_max_retries_real;
+    'database/retry_interval':          value => $database_retry_interval_real;
+    'database/max_pool_size':           value => $database_max_pool_size_real;
+    'database/max_overflow':            value => $database_max_overflow_real;
+    'database/database_db_max_retries': value => $database_max_overflow_real;
   }
 
 }
-

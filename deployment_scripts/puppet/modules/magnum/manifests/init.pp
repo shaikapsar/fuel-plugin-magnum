@@ -88,27 +88,75 @@
 #  on some distributions.
 #  Defaults to $::os_service_default
 #
+# [*region_name*]
+#   (Optional) Region name for services. This is the
+#   default region name that heat talks to service endpoints on.
+#   Defaults to $::os_service_default.
+#
+# [*database_connection*]
+#   (Optional) Url used to connect to database.
+#   Defaults to "mysql://magnum:magnum@localhost:3306/magnum".
+#
+# [*database_idle_timeout*]
+#   (Optional) Timeout when db connections should be reaped.
+#   Defaults to $::os_service_default
+#
+# [*database_max_retries*]
+#   (Optional) Maximum number of database connection retries during startup.
+#   Setting -1 implies an infinite retry count.
+#   Defaults to $::os_service_default
+#
+# [*database_retry_interval*]
+#   (Optional) Interval between retries of opening a database connection.
+#    Defaults to $::os_service_default
+#
+# [*database_min_pool_size*]
+#   (Optional) Minimum number of SQL connections to keep open in a pool.
+#   Defaults to $::os_service_default
+#
+# [*database_max_pool_size*]
+#   (Optional) Maximum number of SQL connections to keep open in a pool.
+#   Defaults to $::os_service_default
+#
+# [*database_max_overflow*]
+#   (Optional) If set, use this value for max_overflow with sqlalchemy.
+#   Defaults to $::os_service_default
+#
+# [*database_db_max_retries*]
+#   (Optional) Maximum retries in case of connection error or deadlock error
+#   before error is raised. Set to -1 to specify an infinite retry count.
+#   Defaults to $::os_service_default
+#
 class magnum(
-  $package_ensure      = 'present',
-  $verbose             = undef,
-  $debug               = undef,
-  $log_dir             = undef,
-  $use_syslog          = undef,
-  $use_stderr          = undef,
-  $log_facility        = undef,
-  $notification_driver = $::os_service_default,
-  $rpc_backend         = 'rabbit',
-  $rabbit_host         = $::os_service_default,
-  $rabbit_hosts        = $::os_service_default,
-  $rabbit_port         = $::os_service_default,
-  $rabbit_userid       = $::os_service_default,
-  $rabbit_virtual_host = $::os_service_default,
-  $rabbit_password     = $::os_service_default,
-  $rabbit_use_ssl      = $::os_service_default,
-  $kombu_ssl_ca_certs  = $::os_service_default,
-  $kombu_ssl_certfile  = $::os_service_default,
-  $kombu_ssl_keyfile   = $::os_service_default,
-  $kombu_ssl_version   = $::os_service_default,
+  $package_ensure          = 'present',
+  $verbose                 = undef,
+  $debug                   = undef,
+  $log_dir                 = undef,
+  $use_syslog              = undef,
+  $use_stderr              = undef,
+  $log_facility            = undef,
+  $notification_driver     = $::os_service_default,
+  $rpc_backend             = 'rabbit',
+  $rabbit_host             = $::os_service_default,
+  $rabbit_hosts            = $::os_service_default,
+  $rabbit_port             = $::os_service_default,
+  $rabbit_userid           = $::os_service_default,
+  $rabbit_virtual_host     = $::os_service_default,
+  $rabbit_password         = $::os_service_default,
+  $rabbit_use_ssl          = $::os_service_default,
+  $kombu_ssl_ca_certs      = $::os_service_default,
+  $kombu_ssl_certfile      = $::os_service_default,
+  $kombu_ssl_keyfile       = $::os_service_default,
+  $kombu_ssl_version       = $::os_service_default,
+  $region_name             = $::os_service_default,
+  $database_connection     = undef,
+  $database_idle_timeout   = $::os_service_default,
+  $database_min_pool_size  = $::os_service_default,
+  $database_max_pool_size  = $::os_service_default,
+  $database_max_retries    = $::os_service_default,
+  $database_retry_interval = $::os_service_default,
+  $database_max_overflow   = $::os_service_default,
+  $database_db_max_retries = $::os_service_default,
 ) {
 
   include ::magnum::params

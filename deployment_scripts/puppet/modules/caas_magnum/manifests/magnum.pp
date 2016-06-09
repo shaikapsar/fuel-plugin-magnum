@@ -44,6 +44,10 @@ class caas_magnum::magnum {
     $ssl_hash                   = hiera_hash('use_ssl', {})
     $external_dns               = hiera_hash('external_dns', {})
     $external_lb                = hiera('external_lb', false)
+    $max_retries                = hiera('max_retries')
+    $max_pool_size              = hiera('max_pool_size')
+    $max_overflow               = hiera('max_overflow')
+    $idle_timeout               = hiera('idle_timeout')
 
     $internal_auth_protocol     = get_ssl_property($ssl_hash, {}, 'keystone', 'internal', 'protocol', 'http')
     $internal_auth_address      = get_ssl_property($ssl_hash, {}, 'keystone', 'internal', 'hostname', [hiera('keystone_endpoint', ''), $service_endpoint, $management_vip])
@@ -70,7 +74,7 @@ class caas_magnum::magnum {
     $db_name        = pick($magnum['db_name'], 'magnum')
     $db_password    = $magnum['db_password']
     $read_timeout   = '60'
-    $sql_connection = "mysql://${db_user}:${db_password}@${database_vip}/${db_name}?read_timeout=${read_timeout}"
+    $db_connection  = "mysql://${db_user}:${db_password}@${database_vip}/${db_name}?read_timeout=${read_timeout}"
 
     $rabbit_username = hiera( $magnum['rabbit_user'], 'magnum')
     $rabbit_password = $magnum['rabbit_password']
@@ -83,19 +87,21 @@ class caas_magnum::magnum {
 
     class { '::magnum::client': }
 
-    class { '::magnum::db':
-      database_connection => $sql_connection,
-    }
-
     class { '::magnum':
-      debug           => $debug,
-      verbose         => $verbose,
-      use_syslog      => $use_syslog,
-      use_stderr      => $use_stderr,
-      rabbit_hosts    => $amqp_hosts,
-      rabbit_port     => $amqp_port,
-      rabbit_userid   => $rabbit_username,
-      rabbit_password => $rabbit_password,
+      debug                  => $debug,
+      verbose                => $verbose,
+      use_syslog             => $use_syslog,
+      use_stderr             => $use_stderr,
+      rabbit_hosts           => $amqp_hosts,
+      rabbit_port            => $amqp_port,
+      rabbit_userid          => $rabbit_username,
+      rabbit_password        => $rabbit_password,
+      region_name            => $region,
+      database_connection    => $db_connection,
+      database_idle_timeout  => $idle_timeout,
+      database_max_pool_size => $max_pool_size,
+      database_max_overflow  => $max_overflow,
+      database_max_retries   => $max_retries,
     }
 
     class { '::magnum::api':
