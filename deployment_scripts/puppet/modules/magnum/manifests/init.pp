@@ -8,6 +8,31 @@
 #  (Optional) Ensure state for package
 #  Defaults to 'present'
 #
+# [*verbose*]
+#   (Optional) Should the daemons log verbose messages
+#   Defaults to undef.
+#
+# [*debug*]
+#   (Optional) Should the daemons log debug messages
+#   Defaults to undef.
+#
+# [*log_dir*]
+#   (Optional) Directory where logs should be stored
+#   If set to boolean 'false', it will not log to any directory
+#   Defaults to undef.
+#
+# [*use_syslog*]
+#   (Optional) Use syslog for logging.
+#   Defaults to undef.
+#
+# [*use_stderr*]
+#   (optional) Use stderr for logging
+#   Defaults to undef.
+#
+# [*log_facility*]
+#   (Optional) Syslog facility to receive log lines.
+#   Defaults to undef.
+#
 # [*notification_driver*]
 #  (Optional) Notification driver to use
 #  Defaults to $::os_service_default
@@ -65,6 +90,12 @@
 #
 class magnum(
   $package_ensure      = 'present',
+  $verbose             = undef,
+  $debug               = undef,
+  $log_dir             = undef,
+  $use_syslog          = undef,
+  $use_stderr          = undef,
+  $log_facility        = undef,
   $notification_driver = $::os_service_default,
   $rpc_backend         = 'rabbit',
   $rabbit_host         = $::os_service_default,
@@ -81,7 +112,7 @@ class magnum(
 ) {
 
   include ::magnum::params
-#  include ::magnum::logging
+  include ::magnum::logging
   include ::magnum::policy
   include ::magnum::db
 

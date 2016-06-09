@@ -79,18 +79,19 @@ class caas_magnum::magnum {
     $admin_user           = pick($magnum['auth_name'], 'magnum')
     $admin_tenant_name    = pick($magnum['tenant'], 'services')
 
-    class { '::magnum::client': }
+    $bind_host            = get_network_role_property('magnum/api', 'ipaddr')
 
-    class { '::magnum::logging':
-      debug   => $debug,
-      verbose => $verbose,
-    }
+    class { '::magnum::client': }
 
     class { '::magnum::db':
       database_connection => $sql_connection,
     }
 
     class { '::magnum':
+      debug           => $debug,
+      verbose         => $verbose,
+      use_syslog      => $use_syslog,
+      use_stderr      => $use_stderr,
       rabbit_hosts    => $amqp_hosts,
       rabbit_port     => $amqp_port,
       rabbit_userid   => $rabbit_username,
@@ -103,7 +104,7 @@ class caas_magnum::magnum {
       admin_tenant_name => $admin_tenant_name,
       auth_uri          => $auth_uri,
       identity_uri      => $identity_uri,
-      host              => '0.0.0.0',
+      host              => $bind_host,
     }
 
     class { '::magnum::conductor': }
@@ -112,7 +113,7 @@ class caas_magnum::magnum {
 
     class { '::magnum::config':
       magnum_config => {
-        'trust/trustee_domain_admin_password' => { value => $magnum['domain_password'] },
+        'trust/trustee_domain_admin_password' => { value        => $magnum['domain_password'] },
       },
     }
 
