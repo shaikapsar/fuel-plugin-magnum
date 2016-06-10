@@ -2,6 +2,6 @@
 .build
 *.pyc
 *.rpm
-deployment_scripts/puppet/modules/magnum
-deployment_scripts/puppet/modules/oslo
+deployment_scripts/puppet/modules/magnum/*
+deployment_scripts/puppet/modules/oslo/*
 repositories/ubuntu/*.deb
