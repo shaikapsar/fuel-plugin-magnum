@@ -4,10 +4,6 @@
 #
 # == parameters
 #
-#  [*verbose*]
-#    (Optional) Should the daemons log verbose messages.
-#    Defaults to $::os_service_default
-#
 #  [*debug*]
 #    (Optional) Should the daemons log debug messages
 #    Defaults to $::os_service_default
@@ -98,7 +94,6 @@ class magnum::logging(
   $use_stderr                    = $::os_service_default,
   $log_facility                  = $::os_service_default,
   $log_dir                       = '/var/log/magnum',
-  $verbose                       = $::os_service_default,
   $debug                         = $::os_service_default,
   $logging_context_format_string = $::os_service_default,
   $logging_default_format_string = $::os_service_default,
@@ -113,38 +108,23 @@ class magnum::logging(
   $log_date_format               = $::os_service_default,
 ) {
 
-  # NOTE(shaikapsar): In order to keep backward compatibility we rely on the pick function
-  # to use magnum::<myparam> first then magnum::logging::<myparam>.
-  $use_syslog_real = pick($::magnum::use_syslog,$use_syslog)
-  $use_stderr_real = pick($::magnum::use_stderr,$use_stderr)
-  $log_facility_real = pick($::magnum::log_facility,$log_facility)
-  $log_dir_real = pick($::magnum::log_dir,$log_dir)
-  $verbose_real  = pick($::magnum::verbose,$verbose)
-  $debug_real = pick($::magnum::debug,$debug)
-
-  if is_service_default($default_log_levels) {
-    $default_log_levels_real = $default_log_levels
-  } else {
-    $default_log_levels_real = join(sort(join_keys_to_values($default_log_levels, '=')), ',')
+  oslo::log { 'magnum_config':
+    debug                         => $debug,
+    use_syslog                    => $use_syslog,
+    use_stderr                    => $use_stderr,
+    log_dir                       => $log_dir,
+    syslog_log_facility           => $log_facility,
+    logging_context_format_string => $logging_context_format_string,
+    logging_default_format_string => $logging_default_format_string,
+    logging_debug_format_suffix   => $logging_debug_format_suffix,
+    logging_exception_prefix      => $logging_exception_prefix,
+    log_config_append             => $log_config_append,
+    default_log_levels            => $default_log_levels,
+    publish_errors                => $publish_errors,
+    fatal_deprecations            => $fatal_deprecations,
+    log_date_format               => $log_date_format,
+    instance_format               => $instance_format,
+    instance_uuid_format          => $instance_uuid_format,
   }
 
-  magnum_config {
-    'DEFAULT/debug':                         value => $debug_real;
-    'DEFAULT/verbose':                       value => $verbose_real;
-    'DEFAULT/use_stderr':                    value => $use_stderr_real;
-    'DEFAULT/use_syslog':                    value => $use_syslog_real;
-    'DEFAULT/log_dir':                       value => $log_dir_real;
-    'DEFAULT/syslog_log_facility':           value => $log_facility_real;
-    'DEFAULT/default_log_levels':            value => $default_log_levels_real;
-    'DEFAULT/logging_context_format_string': value => $logging_context_format_string;
-    'DEFAULT/logging_default_format_string': value => $logging_default_format_string;
-    'DEFAULT/logging_debug_format_suffix':   value => $logging_debug_format_suffix;
-    'DEFAULT/logging_exception_prefix':      value => $logging_exception_prefix;
-    'DEFAULT/log_config_append':             value => $log_config_append;
-    'DEFAULT/publish_errors':                value => $publish_errors;
-    'DEFAULT/fatal_deprecations':            value => $fatal_deprecations;
-    'DEFAULT/instance_format':               value => $instance_format;
-    'DEFAULT/instance_uuid_format':          value => $instance_uuid_format;
-    'DEFAULT/log_date_format':               value => $log_date_format;
-  }
 }

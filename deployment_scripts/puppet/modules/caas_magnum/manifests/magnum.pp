@@ -63,61 +63,66 @@ class caas_magnum::magnum {
     $internal_protocol          = get_ssl_property($ssl_hash, {}, 'magnum', 'internal', 'protocol', 'http')
     $internal_address           = get_ssl_property($ssl_hash, {}, 'magnum', 'internal', 'hostname', [$management_vip])
 
-    $admin_protocol            = get_ssl_property($ssl_hash, {}, 'magnum', 'admin', 'protocol', 'http')
-    $admin_address             = get_ssl_property($ssl_hash, {}, 'magnum', 'admin', 'hostname', [$management_vip])
+    $admin_protocol             = get_ssl_property($ssl_hash, {}, 'magnum', 'admin', 'protocol', 'http')
+    $admin_address              = get_ssl_property($ssl_hash, {}, 'magnum', 'admin', 'hostname', [$management_vip])
 
-    $magnum_endpoint_type      = pick($magnum['magnum_endpoint_type'], 'internalURL')
-    $heat_endpoint_type        = pick($magnum['heat_endpoint_type'], 'internalURL')
-    $glance_endpoint_type      = pick($magnum['glance_endpoint_type'], 'internalURL')
-    $barbican_endpoint_type    = pick($magnum['barbican_endpoint_type'], 'internalURL')
-    $nova_endpoint_type        = pick($magnum['nova_endpoint_type'], 'internalURL')
-    $cinder_endpoint_type      = pick($magnum['cinder_endpoint_type'], 'internalURL')
-    $neutron_endpoint_typ      = pick($magnum['neutron_endpoint_type'], 'internalURL')
+    $magnum_endpoint_type       = pick($magnum['magnum_endpoint_type'], 'internalURL')
+    $heat_endpoint_type         = pick($magnum['heat_endpoint_type'], 'internalURL')
+    $glance_endpoint_type       = pick($magnum['glance_endpoint_type'], 'internalURL')
+    $barbican_endpoint_type     = pick($magnum['barbican_endpoint_type'], 'internalURL')
+    $nova_endpoint_type         = pick($magnum['nova_endpoint_type'], 'internalURL')
+    $cinder_endpoint_type       = pick($magnum['cinder_endpoint_type'], 'internalURL')
+    $neutron_endpoint_type      = pick($magnum['neutron_endpoint_type'], 'internalURL')
 
 
-    $public_url                = "${public_protocol}://${public_address}:${bind_port}/v1"
-    $internal_url              = "${internal_protocol}://${internal_address}:${bind_port}/v1"
-    $admin_url                 = "${admin_protocol}://${admin_address}:${bind_port}/v1"
+    $public_url                 = "${public_protocol}://${public_address}:${bind_port}/v1"
+    $internal_url               = "${internal_protocol}://${internal_address}:${bind_port}/v1"
+    $admin_url                  = "${admin_protocol}://${admin_address}:${bind_port}/v1"
 
-    $db_user                   = pick($magnum['db_user'], 'magnum')
-    $db_name                   = pick($magnum['db_name'], 'magnum')
-    $db_password               = $magnum['db_password']
-    $read_timeout              = '60'
-    $db_connection             = "mysql://${db_user}:${db_password}@${database_vip}/${db_name}?read_timeout=${read_timeout}"
+    $db_user                    = pick($magnum['db_user'], 'magnum')
+    $db_name                    = pick($magnum['db_name'], 'magnum')
+    $db_password                = $magnum['db_password']
+    $read_timeout               = '60'
+    $db_connection              = "mysql://${db_user}:${db_password}@${database_vip}/${db_name}?read_timeout=${read_timeout}"
 
-    $rabbit_username = hiera( $magnum['rabbit_user'], 'magnum')
-    $rabbit_password = $magnum['rabbit_password']
+    $rabbit_username            = hiera( $magnum['rabbit_user'], 'magnum')
+    $rabbit_password            = $magnum['rabbit_password']
 
-    $admin_password       = $magnum['auth_password']
-    $admin_user           = pick($magnum['auth_name'], 'magnum')
-    $admin_tenant_name    = pick($magnum['tenant'], 'services')
+    $admin_password             = $magnum['auth_password']
+    $admin_user                 = pick($magnum['auth_name'], 'magnum')
+    $admin_tenant_name          = pick($magnum['tenant'], 'services')
 
-    $bind_host            = get_network_role_property('magnum/api', 'ipaddr')
+    $bind_host                  = get_network_role_property('magnum/api', 'ipaddr')
+
+    $domain_name                = pick($magnum['domain_name'], 'magnum')
+    $domain_admin               = pick($magnum['domain_admin'], 'magnum_admin')
+    $domain_admin_email         = pick($magnum['domain_admin_email'], 'magnum_admin@localhost')
+    $domain_password            = $magnum['domain_password']
+
+    validate_string($domain_password)
 
     class { '::magnum::client': }
 
-    class { '::magnum':
-      debug                  => $debug,
-      verbose                => $verbose,
-      use_syslog             => $use_syslog,
-      use_stderr             => $use_stderr,
-      rabbit_hosts           => $amqp_hosts,
-      rabbit_port            => $amqp_port,
-      rabbit_userid          => $rabbit_username,
-      rabbit_password        => $rabbit_password,
+    class { '::magnum::db':
       database_connection    => $db_connection,
       database_idle_timeout  => $idle_timeout,
       database_max_pool_size => $max_pool_size,
       database_max_overflow  => $max_overflow,
       database_max_retries   => $max_retries,
-      region_name            => $region,
-      magnum_endpoint_type   => $magnum_endpoint_type,
-      heat_endpoint_type     => $heat_endpoint_type,
-      glance_endpoint_type   => $glance_endpoint_type,
-      barbican_endpoint_type => $barbican_endpoint_type,
-      nova_endpoint_type     => $nova_endpoint_type,
-      cinder_endpoint_type   => $cinder_endpoint_type,
-      neutron_endpoint_type  => $neutron_endpoint_type,
+    }
+
+    class { '::magnum':
+      rabbit_hosts    => $amqp_hosts,
+      rabbit_port     => $amqp_port,
+      rabbit_userid   => $rabbit_username,
+      rabbit_password => $rabbit_password,
+    }
+
+    class { '::magnum::keystone::domain':
+      domain_name        => $domain_name,
+      domain_admin       => $domain_admin,
+      domain_admin_email => $domain_admin_email,
+      domain_password    => $domain_password,
     }
 
     class { '::magnum::api':
@@ -134,10 +139,22 @@ class caas_magnum::magnum {
     class { '::magnum::certificates': }
 
     class { '::magnum::config':
-      magnum_config => {
-        'trust/trustee_domain_admin_password' => { value        => $magnum['domain_password'] },
+      magnum_config                     => {
+        'magnum_client/region_name'     => {  value => $region },
+        'magnum_client/endpoint_type'   => {  value => $magnum_endpoint_type },
+        'heat_client/region_name'       => {  value => $region },
+        'heat_client/endpoint_type'     => {  value => $heat_endpoint_type },
+        'glance_client/region_name'     => {  value => $region },
+        'glance_client/endpoint_type'   => {  value => $glance_endpoint_type },
+        'barbican_client/region_name'   => {  value => $region },
+        'barbican_client/endpoint_type' => {  value => $barbican_endpoint_type },
+        'nova_client/region_name'       => {  value => $region },
+        'nova_client/endpoint_type'     => {  value => $nova_endpoint_type },
+        'cinder_client/region_name'     => {  value => $region },
+        'cinder_client/endpoint_type'   => {  value => $cinder_endpoint_type },
+        'neutron_client/region_name'    => {  value => $region },
+        'neutron_client/endpoint_type'  => {  value => $neutron_endpoint_type },
       },
     }
-
   }
 }

@@ -49,14 +49,9 @@ class caas_magnum::keystone {
     $configure_endpoint  = pick($magnum['configure_endpoint'], true)
     $service_name        = pick($magnum['service_name'], 'magnum')
     $tenant              = pick($magnum['tenant'], 'services')
-    $domain_name         = pick($magnum['domain_name'], 'magnum')
-    $domain_admin        = pick($magnum['domain_admin'], 'magnum_admin')
-    $domain_admin_email  = pick($magnum['domain_admin_email'], 'magnum_admin@localhost')
-    $domain_password     = $magnum['domain_password']
 
     validate_string($public_address)
     validate_string($password)
-    validate_string($domain_password)
 
     $bind_port = '9511'
 
@@ -84,11 +79,5 @@ class caas_magnum::keystone {
       admin_url           => $admin_url,
     }
 
-    class { '::magnum::keystone::domain':
-      domain_name        => $domain_name,
-      domain_admin       => $domain_admin,
-      domain_admin_email => $domain_admin_email,
-      domain_password    => $domain_password,
-    }
   }
 }

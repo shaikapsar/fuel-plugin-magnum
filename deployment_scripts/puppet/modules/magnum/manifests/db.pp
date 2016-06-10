@@ -49,54 +49,18 @@ class magnum::db (
   $database_db_max_retries = $::os_service_default,
 ) {
 
-  # NOTE(shaikapsar): In order to keep backward compatibility we rely on the pick function
-  # to use magnum::<myparam> if magnum::db::<myparam> isn't specified.
-  $database_connection_real     = pick($::magnum::database_connection, $database_connection)
-  $database_idle_timeout_real   = pick($::magnum::database_idle_timeout, $database_idle_timeout)
-  $database_min_pool_size_real  = pick($::magnum::database_min_pool_size, $database_min_pool_size)
-  $database_max_pool_size_real  = pick($::magnum::database_max_pool_size, $database_max_pool_size)
-  $database_max_retries_real    = pick($::magnum::database_max_retries, $database_max_retries)
-  $database_retry_interval_real = pick($::magnum::database_retry_interval, $database_retry_interval)
-  $database_max_overflow_real   = pick($::magnum::database_max_overflow, $database_max_overflow)
-  $database_db_max_retries_real = pick($::magnum::database_db_max_retries, $database_db_max_retries)
-
   validate_re($database_connection,
     '^(mysql(\+pymysql)?|postgresql):\/\/(\S+:\S+@\S+\/\S+)?')
 
-  case $database_connection {
-    /^mysql:\/\//: {
-      $backend_package = false
-      require 'mysql::bindings'
-      require 'mysql::bindings::python'
-    }
-    /^postgresql:\/\//: {
-      $backend_package = false
-      require 'postgresql::lib::python'
-    }
-    /^sqlite:\/\//: {
-      $backend_package = $::magnum::params::sqlite_package
-    }
-    default: {
-      fail('Unsupported backend configured')
-    }
-  }
-
-  if $backend_package and !defined(Package[$backend_package]) {
-    package {'magnum-backend-package':
-      ensure => present,
-      name   => $backend_package,
-      tag    => 'openstack',
-    }
-  }
-  magnum_config {
-    'database/connection':              value => $database_connection_real, secret => true;
-    'database/idle_timeout':            value => $database_idle_timeout_real;
-    'database/min_pool_size':           value => $database_min_pool_size_real;
-    'database/max_retries':             value => $database_max_retries_real;
-    'database/retry_interval':          value => $database_retry_interval_real;
-    'database/max_pool_size':           value => $database_max_pool_size_real;
-    'database/max_overflow':            value => $database_max_overflow_real;
-    'database/database_db_max_retries': value => $database_max_overflow_real;
+  oslo::db { 'magnum_config':
+    connection     => $database_connection,
+    idle_timeout   => $database_idle_timeout,
+    min_pool_size  => $database_min_pool_size,
+    max_pool_size  => $database_max_pool_size,
+    max_retries    => $database_max_retries,
+    retry_interval => $database_retry_interval,
+    max_overflow   => $database_max_overflow,
+    db_max_retries => $database_db_max_retries,
   }
 
 }

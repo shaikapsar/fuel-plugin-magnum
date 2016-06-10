@@ -19,10 +19,10 @@ http://ubuntu-cloud.archive.canonical.com/ubuntu/pool/main/m/magnum/magnum-condu
 # Puppet modules needed for OpenStack Magnum services from master.
 MAGNUM_REF="master"
 MAGNUM_TARBALL_URL="https://github.com/openstack/puppet-magnum/archive/${MAGNUM_REF}.tar.gz"
+download_puppet_module "magnum" ${MAGNUM_TARBALL_URL}
 
-# Disabled module download. Upstream magnum puppet module break with MOS9.0.
+#Oslo puppet module to work magnum puppet on Fuel 9.0
+OSLO_REF="9.0.0"
+OSLO_TARBALL_URL="https://github.com/openstack/puppet-oslo/archive/${OSLO_REF}.tar.gz"
+download_puppet_module "oslo" ${OSLO_TARBALL_URL}
 
-# https://review.openstack.org/#/c/313202/
-# https://review.openstack.org/#/c/313024/
-
-#download_puppet_module "magnum" ${MAGNUM_TARBALL_URL}

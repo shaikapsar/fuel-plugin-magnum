@@ -27,7 +27,7 @@ DEB_REPO="${ROOT}"/repositories/ubuntu/
 function download_package {
 
     # Cleanup RPM or DEB packages downloaded from previous pluing build.
-    rm -rf $RPM_REPO/* $DEB_REPO/*
+    rm -rf $RPM_REPO/*.rpm $DEB_REPO/*.deb
 
     while [ $# -gt 0 ]; do
         if [[ "$1" == *.deb ]]; then
