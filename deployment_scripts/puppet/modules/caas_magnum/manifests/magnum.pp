@@ -28,6 +28,8 @@ class caas_magnum::magnum {
 
     prepare_network_config(hiera('network_scheme', {}))
 
+    $access_hash                = hiera_hash('access', {})
+    $keystone_hash              = hiera_hash('keystone', {})
     $public_vip                 = hiera('public_vip')
     $database_vip               = hiera('database_vip')
     $management_vip             = hiera('management_vip')
@@ -66,6 +68,8 @@ class caas_magnum::magnum {
     $admin_protocol             = get_ssl_property($ssl_hash, {}, 'magnum', 'admin', 'protocol', 'http')
     $admin_address              = get_ssl_property($ssl_hash, {}, 'magnum', 'admin', 'hostname', [$management_vip])
 
+    $haproxy_stats_url = "http://${service_endpoint}:10000/;csv"
+
     $magnum_endpoint_type       = pick($magnum['magnum_endpoint_type'], 'internalURL')
     $heat_endpoint_type         = pick($magnum['heat_endpoint_type'], 'internalURL')
     $glance_endpoint_type       = pick($magnum['glance_endpoint_type'], 'internalURL')
@@ -88,9 +92,9 @@ class caas_magnum::magnum {
     $rabbit_username            = hiera( $magnum['rabbit_user'], 'magnum')
     $rabbit_password            = $magnum['rabbit_password']
 
-    $admin_password             = $magnum['auth_password']
-    $admin_user                 = pick($magnum['auth_name'], 'magnum')
-    $admin_tenant_name          = pick($magnum['tenant'], 'services')
+    $magnum_admin_password      = $magnum['auth_password']
+    $magnum_admin_user          = pick($magnum['auth_name'], 'magnum')
+    $magnum_admin_tenant_name   = pick($magnum['tenant'], 'services')
 
     $bind_host                  = get_network_role_property('magnum/api', 'ipaddr')
 
@@ -99,7 +103,22 @@ class caas_magnum::magnum {
     $domain_admin_email         = pick($magnum['domain_admin_email'], 'magnum_admin@localhost')
     $domain_password            = $magnum['domain_password']
 
+    $admin_token                = $keystone_hash['admin_token']
+    $admin_tenant               = $access_hash['tenant']
+    $admin_email                = $access_hash['email']
+    $admin_user                 = $access_hash['user']
+    $admin_password             = $access_hash['password']
+
     validate_string($domain_password)
+
+    $murano_settings_hash = hiera_hash('murano_settings', {})
+    if has_key($murano_settings_hash, 'murano_repo_url') {
+      $murano_repo_url = $murano_settings_hash['murano_repo_url']
+    } else {
+      $murano_repo_url = 'http://storage.apps.openstack.org'
+    }
+
+    class { '::osnailyfacter::wait_for_keystone_backends':}
 
     class { '::magnum::client': }
 
@@ -118,6 +137,15 @@ class caas_magnum::magnum {
       rabbit_password => $rabbit_password,
     }
 
+  osnailyfacter::credentials_file { '/root/openrc':
+    admin_user      => $admin_user,
+    admin_password  => $admin_password,
+    admin_tenant    => $admin_tenant,
+    region_name     => $region,
+    auth_url        => $auth_uri,
+    murano_repo_url => $murano_repo_url,
+  }
+
     class { '::magnum::keystone::domain':
       domain_name        => $domain_name,
       domain_admin       => $domain_admin,
@@ -126,9 +154,9 @@ class caas_magnum::magnum {
     }
 
     class { '::magnum::api':
-      admin_password    => $admin_password,
-      admin_user        => $admin_user,
-      admin_tenant_name => $admin_tenant_name,
+      admin_password    => $magnum_admin_password,
+      admin_user        => $magnum_admin_user,
+      admin_tenant_name => $magnum_admin_tenant_name,
       auth_uri          => $auth_uri,
       identity_uri      => $identity_uri,
       host              => $bind_host,
@@ -139,22 +167,26 @@ class caas_magnum::magnum {
     class { '::magnum::certificates': }
 
     class { '::magnum::config':
-      magnum_config                     => {
-        'magnum_client/region_name'     => {  value => $region },
-        'magnum_client/endpoint_type'   => {  value => $magnum_endpoint_type },
-        'heat_client/region_name'       => {  value => $region },
-        'heat_client/endpoint_type'     => {  value => $heat_endpoint_type },
-        'glance_client/region_name'     => {  value => $region },
-        'glance_client/endpoint_type'   => {  value => $glance_endpoint_type },
-        'barbican_client/region_name'   => {  value => $region },
-        'barbican_client/endpoint_type' => {  value => $barbican_endpoint_type },
-        'nova_client/region_name'       => {  value => $region },
-        'nova_client/endpoint_type'     => {  value => $nova_endpoint_type },
-        'cinder_client/region_name'     => {  value => $region },
-        'cinder_client/endpoint_type'   => {  value => $cinder_endpoint_type },
-        'neutron_client/region_name'    => {  value => $region },
-        'neutron_client/endpoint_type'  => {  value => $neutron_endpoint_type },
+      magnum_config => {
+        'magnum_client/region_name'     => {  value       => $region },
+        'magnum_client/endpoint_type'   => {  value       => $magnum_endpoint_type },
+        'heat_client/region_name'       => {  value       => $region },
+        'heat_client/endpoint_type'     => {  value       => $heat_endpoint_type },
+        'glance_client/region_name'     => {  value       => $region },
+        'glance_client/endpoint_type'   => {  value       => $glance_endpoint_type },
+        'barbican_client/region_name'   => {  value       => $region },
+        'barbican_client/endpoint_type' => {  value       => $barbican_endpoint_type },
+        'nova_client/region_name'       => {  value       => $region },
+        'nova_client/endpoint_type'     => {  value       => $nova_endpoint_type },
+        'cinder_client/region_name'     => {  value       => $region },
+        'cinder_client/endpoint_type'   => {  value       => $cinder_endpoint_type },
+        'neutron_client/region_name'    => {  value       => $region },
+        'neutron_client/endpoint_type'  => {  value       => $neutron_endpoint_type },
       },
     }
+
+    Osnailyfacter::Credentials_file <||>
+      -> Class['::osnailyfacter::wait_for_keystone_backends']
+        -> Class['::magnum::keystone::domain']
   }
 }
