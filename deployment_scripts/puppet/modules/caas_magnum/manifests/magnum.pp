@@ -51,9 +51,12 @@ class caas_magnum::magnum {
     $max_overflow               = hiera('max_overflow')
     $idle_timeout               = hiera('idle_timeout')
 
+    $identity_api_version       = '3'
+
     $internal_auth_protocol     = get_ssl_property($ssl_hash, {}, 'keystone', 'internal', 'protocol', 'http')
     $internal_auth_address      = get_ssl_property($ssl_hash, {}, 'keystone', 'internal', 'hostname', [hiera('keystone_endpoint', ''), $service_endpoint, $management_vip])
     $auth_uri                   = "${internal_auth_protocol}://${internal_auth_address}:5000/"
+    $magnum_auth_uri            = "${auth_uri}v${identity_api_version}"
 
     $admin_auth_protocol        = get_ssl_property($ssl_hash, {}, 'keystone', 'admin', 'protocol', 'http')
     $admin_auth_address         = get_ssl_property($ssl_hash, {}, 'keystone', 'admin', 'hostname', [hiera('keystone_endpoint', ''), $service_endpoint, $management_vip])
@@ -118,6 +121,18 @@ class caas_magnum::magnum {
       $murano_repo_url = 'http://storage.apps.openstack.org'
     }
 
+    #TODO(shaikapsar)For testing cert_manager_type is local
+    $cert_manager_type         = pick($magnum['cert_manager_type'], 'local')
+
+    class { '::magnum::certificates':
+      cert_manager_type => $cert_manager_type,
+    }
+
+    exec { 'prepare_storage_path':
+      command => 'mkdir -p /var/lib/magnum/certificates/ && chown magnum:magnum /var/lib/magnum/certificates/',
+      path    => '/usr/local/bin/:/bin/',
+    }
+
     class { '::osnailyfacter::wait_for_keystone_backends':}
 
     class { '::magnum::client': }
@@ -137,14 +152,14 @@ class caas_magnum::magnum {
       rabbit_password => $rabbit_password,
     }
 
-  osnailyfacter::credentials_file { '/root/openrc':
-    admin_user      => $admin_user,
-    admin_password  => $admin_password,
-    admin_tenant    => $admin_tenant,
-    region_name     => $region,
-    auth_url        => $auth_uri,
-    murano_repo_url => $murano_repo_url,
-  }
+    osnailyfacter::credentials_file { '/root/openrc':
+      admin_user      => $admin_user,
+      admin_password  => $admin_password,
+      admin_tenant    => $admin_tenant,
+      region_name     => $region,
+      auth_url        => $auth_uri,
+      murano_repo_url => $murano_repo_url,
+    }
 
     class { '::magnum::keystone::domain':
       domain_name        => $domain_name,
@@ -153,40 +168,46 @@ class caas_magnum::magnum {
       domain_password    => $domain_password,
     }
 
+    class { '::caas_magnum::domain':
+      domain_id       => get_domain_id_by_name( $admin_token, $identity_api_version, $magnum_auth_uri, $domain_name ),
+      domain_admin_id => get_user_id_by_name( $admin_token, $identity_api_version, $magnum_auth_uri, $domain_admin, $domain_name ),
+    }
+
     class { '::magnum::api':
       admin_password    => $magnum_admin_password,
       admin_user        => $magnum_admin_user,
       admin_tenant_name => $magnum_admin_tenant_name,
-      auth_uri          => $auth_uri,
+      auth_uri          => $magnum_auth_uri,
       identity_uri      => $identity_uri,
       host              => $bind_host,
     }
 
     class { '::magnum::conductor': }
 
-    class { '::magnum::certificates': }
-
     class { '::magnum::config':
       magnum_config => {
-        'magnum_client/region_name'     => {  value       => $region },
-        'magnum_client/endpoint_type'   => {  value       => $magnum_endpoint_type },
-        'heat_client/region_name'       => {  value       => $region },
-        'heat_client/endpoint_type'     => {  value       => $heat_endpoint_type },
-        'glance_client/region_name'     => {  value       => $region },
-        'glance_client/endpoint_type'   => {  value       => $glance_endpoint_type },
-        'barbican_client/region_name'   => {  value       => $region },
-        'barbican_client/endpoint_type' => {  value       => $barbican_endpoint_type },
-        'nova_client/region_name'       => {  value       => $region },
-        'nova_client/endpoint_type'     => {  value       => $nova_endpoint_type },
-        'cinder_client/region_name'     => {  value       => $region },
-        'cinder_client/endpoint_type'   => {  value       => $cinder_endpoint_type },
-        'neutron_client/region_name'    => {  value       => $region },
-        'neutron_client/endpoint_type'  => {  value       => $neutron_endpoint_type },
+        'keystone_authtoken/region_name' => {  value       => $region },
+        'magnum_client/region_name'      => {  value       => $region },
+        'magnum_client/endpoint_type'    => {  value       => $magnum_endpoint_type },
+        'heat_client/region_name'        => {  value       => $region },
+        'heat_client/endpoint_type'      => {  value       => $heat_endpoint_type },
+        'glance_client/region_name'      => {  value       => $region },
+        'glance_client/endpoint_type'    => {  value       => $glance_endpoint_type },
+        'barbican_client/region_name'    => {  value       => $region },
+        'barbican_client/endpoint_type'  => {  value       => $barbican_endpoint_type },
+        'nova_client/region_name'        => {  value       => $region },
+        'nova_client/endpoint_type'      => {  value       => $nova_endpoint_type },
+        'cinder_client/region_name'      => {  value       => $region },
+        'cinder_client/endpoint_type'    => {  value       => $cinder_endpoint_type },
+        'neutron_client/region_name'     => {  value       => $region },
+        'neutron_client/endpoint_type'   => {  value       => $neutron_endpoint_type },
       },
     }
 
-    Osnailyfacter::Credentials_file <||>
-      -> Class['::osnailyfacter::wait_for_keystone_backends']
-        -> Class['::magnum::keystone::domain']
+    Class['::osnailyfacter::wait_for_keystone_backends']
+      -> Class['::magnum::keystone::domain']
+        -> Class['::caas_magnum::domain']
+
+    Class['::magnum::certificates'] -> Exec['prepare_storage_path']
   }
 }
