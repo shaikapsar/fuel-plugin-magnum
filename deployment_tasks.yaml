@@ -129,3 +129,19 @@
     puppet_modules: /etc/puppet/modules:puppet/modules
     timeout: 1800
 
+- id: magnum-disto-upload
+  type: puppet
+  version: 2.0.0
+  groups: [primary-controller]
+  requires: [glance, post_deployment_start ]
+  required_for: [post_deployment_stop]
+  cross-depends:
+    - name: glance
+    - name: post_deployment_start
+  parameters:
+    puppet_manifest: puppet/modules/caas_magnum/modular/images.pp
+    puppet_modules: /etc/puppet/modules:puppet/modules
+    timeout: 3600
+  # reexecute_on is needed for scale-down operations
+  reexecute_on:
+    - deploy_changes
