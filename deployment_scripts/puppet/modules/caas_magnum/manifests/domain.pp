@@ -59,17 +59,26 @@ class caas_magnum::domain {
       $murano_repo_url = 'http://storage.apps.openstack.org'
     }
 
+    $murano_hash    = hiera_hash('murano', {})
+    $murano_plugins = pick($murano_hash['plugins'], {})
+    if has_key($murano_plugins, 'glance_artifacts_plugin') {
+      $murano_glare_plugin = $murano_plugins['glance_artifacts_plugin']['enabled']
+    } else {
+      $murano_glare_plugin = false
+    }
+
     package { 'python-openstackclient' :
       ensure => 'installed',
     }
 
     osnailyfacter::credentials_file { '/root/openrc':
-      admin_user      => $admin_user,
-      admin_password  => $admin_password,
-      admin_tenant    => $admin_tenant,
-      region_name     => $region,
-      auth_url        => $auth_uri,
-      murano_repo_url => $murano_repo_url,
+      admin_user          => $admin_user,
+      admin_password      => $admin_password,
+      admin_tenant        => $admin_tenant,
+      region_name         => $region,
+      auth_url            => $auth_uri,
+      murano_repo_url     => $murano_repo_url,
+      murano_glare_plugin => $murano_glare_plugin,
     }
 
     if roles_include('primary-magnum') {

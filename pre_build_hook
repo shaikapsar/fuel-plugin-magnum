@@ -26,3 +26,5 @@ OSLO_REF="9.0.0"
 OSLO_TARBALL_URL="https://github.com/openstack/puppet-oslo/archive/${OSLO_REF}.tar.gz"
 download_puppet_module "oslo" ${OSLO_TARBALL_URL}
 
+#FIXME Make use of patch and diff tools to update domain.pp
+cp patch/domain.pp deployment_scripts/puppet/modules/magnum/manifests/keystone/domain.pp
