@@ -119,8 +119,6 @@
   required_for: [magnum-service]
   cross-depends:
     - name: magnum-keystone
-  cross-depended-by:
-   - name: magnum-keystone
   parameters:
     puppet_manifest: puppet/modules/caas_magnum/modular/domain.pp
     puppet_modules: /etc/puppet/modules:puppet/modules
