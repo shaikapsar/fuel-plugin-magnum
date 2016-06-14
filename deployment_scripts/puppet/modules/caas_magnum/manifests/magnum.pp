@@ -71,7 +71,7 @@ class caas_magnum::magnum {
     $admin_protocol             = get_ssl_property($ssl_hash, {}, 'magnum', 'admin', 'protocol', 'http')
     $admin_address              = get_ssl_property($ssl_hash, {}, 'magnum', 'admin', 'hostname', [$management_vip])
 
-    $haproxy_stats_url = "http://${service_endpoint}:10000/;csv"
+    $haproxy_stats_url          = "http://${service_endpoint}:10000/;csv"
 
     $magnum_endpoint_type       = pick($magnum['magnum_endpoint_type'], 'internalURL')
     $heat_endpoint_type         = pick($magnum['heat_endpoint_type'], 'internalURL')
@@ -114,13 +114,6 @@ class caas_magnum::magnum {
 
     validate_string($domain_password)
 
-    $murano_settings_hash = hiera_hash('murano_settings', {})
-    if has_key($murano_settings_hash, 'murano_repo_url') {
-      $murano_repo_url = $murano_settings_hash['murano_repo_url']
-    } else {
-      $murano_repo_url = 'http://storage.apps.openstack.org'
-    }
-
     #TODO(shaikapsar)For testing cert_manager_type is local
     $cert_manager_type         = pick($magnum['cert_manager_type'], 'local')
 
@@ -132,8 +125,6 @@ class caas_magnum::magnum {
       command => 'mkdir -p /var/lib/magnum/certificates/ && chown magnum:magnum /var/lib/magnum/certificates/',
       path    => '/usr/local/bin/:/bin/',
     }
-
-    class { '::osnailyfacter::wait_for_keystone_backends':}
 
     class { '::magnum::client': }
 
@@ -152,27 +143,6 @@ class caas_magnum::magnum {
       rabbit_password => $rabbit_password,
     }
 
-    osnailyfacter::credentials_file { '/root/openrc':
-      admin_user      => $admin_user,
-      admin_password  => $admin_password,
-      admin_tenant    => $admin_tenant,
-      region_name     => $region,
-      auth_url        => $auth_uri,
-      murano_repo_url => $murano_repo_url,
-    }
-
-    class { '::magnum::keystone::domain':
-      domain_name        => $domain_name,
-      domain_admin       => $domain_admin,
-      domain_admin_email => $domain_admin_email,
-      domain_password    => $domain_password,
-    }
-
-    class { '::caas_magnum::domain':
-      domain_id       => get_domain_id_by_name( $admin_token, $identity_api_version, $magnum_auth_uri, $domain_name ),
-      domain_admin_id => get_user_id_by_name( $admin_token, $identity_api_version, $magnum_auth_uri, $domain_admin, $domain_name ),
-    }
-
     class { '::magnum::api':
       admin_password    => $magnum_admin_password,
       admin_user        => $magnum_admin_user,
@@ -186,6 +156,9 @@ class caas_magnum::magnum {
 
     class { '::magnum::config':
       magnum_config => {
+        'trust/trustee_domain_admin_password' => {  value       => $domain_password },
+        'trust/trustee_domain_id'             => {  value       => get_domain_id($domain_name)  },
+        'trust/trustee_domain_admin_id'       => {  value       => get_user_id_from_name_and_domain_name($domain_admin,$domain_name) },
         'keystone_authtoken/region_name' => {  value       => $region },
         'magnum_client/region_name'      => {  value       => $region },
         'magnum_client/endpoint_type'    => {  value       => $magnum_endpoint_type },
@@ -203,11 +176,6 @@ class caas_magnum::magnum {
         'neutron_client/endpoint_type'   => {  value       => $neutron_endpoint_type },
       },
     }
-
-    Class['::osnailyfacter::wait_for_keystone_backends']
-      -> Class['::magnum::keystone::domain']
-        -> Class['::caas_magnum::domain']
-
     Class['::magnum::certificates'] -> Exec['prepare_storage_path']
   }
 }

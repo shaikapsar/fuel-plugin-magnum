@@ -111,6 +111,21 @@
   reexecute_on:
     - deploy_changes
 
+- id: magnum-keystone-domain
+  version: 2.0.0
+  type: puppet
+  groups: [primary-magnum, magnum]
+  requires: [magnum-keystone]
+  required_for: [magnum-service]
+  cross-depends:
+    - name: magnum-keystone
+  cross-depended-by:
+   - name: magnum-keystone
+  parameters:
+    puppet_manifest: puppet/modules/caas_magnum/modular/domain.pp
+    puppet_modules: /etc/puppet/modules:puppet/modules
+    timeout: 1800
+
 - id: magnum-service
   version: 2.0.0
   type: puppet
@@ -129,7 +144,7 @@
     puppet_modules: /etc/puppet/modules:puppet/modules
     timeout: 1800
 
-- id: magnum-disto-upload
+- id: magnum-distro-upload
   type: puppet
   version: 2.0.0
   groups: [primary-controller]

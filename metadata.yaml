@@ -3,7 +3,7 @@ name: fuel-plugin-magnum
 # Human-readable name for your plugin
 title: Magnum Service
 # Plugin version
-version: '1.0.0'
+version: '1.0.5'
 # Description
 description: Deploys the Magnum services in OpenStack Fuel environment.
 # Required fuel version

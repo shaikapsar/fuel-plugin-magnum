@@ -18,18 +18,75 @@
 # caas_magnum::domain
 #
 # TODO(shaikapsar): workaround for bugfix https://bugs.launchpad.net/puppet-magnum/+bug/1581372
-class caas_magnum::domain (
-  $domain_id ,
-  $domain_admin_id ,
-  ) {
+class caas_magnum::domain {
 
-  magnum_config {
+  notice('MODULAR: caas_magnum/domain')
 
-    'trust/trustee_domain_id':
-      value => $domain_id;
+  $magnum          = hiera_hash('fuel-plugin-magnum', undef)
+  $magnum_enabled  = pick($magnum['metadata']['enabled'], false)
 
-    'trust/trustee_domain_admin_id':
-      value => $domain_admin_id;
+  if ($magnum_enabled) {
+
+    $access_hash                = hiera_hash('access', {})
+    $management_vip             = hiera('management_vip')
+    $region                     = hiera('region', 'RegionOne')
+    $service_endpoint           = hiera('service_endpoint')
+    $public_ssl_hash            = hiera_hash('public_ssl', {})
+    $ssl_hash                   = hiera_hash('use_ssl', {})
+
+    $domain_name                = pick($magnum['domain_name'], 'magnum')
+    $domain_admin               = pick($magnum['domain_admin'], 'magnum_admin')
+    $domain_admin_email         = pick($magnum['domain_admin_email'], 'magnum_admin@localhost')
+    $domain_password            = $magnum['domain_password']
+
+    $admin_tenant               = $access_hash['tenant']
+    $admin_user                 = $access_hash['user']
+    $admin_password             = $access_hash['password']
+    $default_domain_id          = 'Default'
+    $identity_api_version       = '3'
+
+    $internal_auth_protocol     = get_ssl_property($ssl_hash, {}, 'keystone', 'internal', 'protocol', 'http')
+    $internal_auth_address      = get_ssl_property($ssl_hash, {}, 'keystone', 'internal', 'hostname', [hiera('keystone_endpoint', ''), $service_endpoint, $management_vip])
+    $auth_uri                   = "${internal_auth_protocol}://${internal_auth_address}:5000/"
+    $magnum_auth_uri            = "${auth_uri}v${identity_api_version}"
+
+    validate_string($domain_password)
+
+    $murano_settings_hash = hiera_hash('murano_settings', {})
+    if has_key($murano_settings_hash, 'murano_repo_url') {
+      $murano_repo_url = $murano_settings_hash['murano_repo_url']
+    } else {
+      $murano_repo_url = 'http://storage.apps.openstack.org'
+    }
+
+    package { 'python-openstackclient' :
+      ensure => 'installed',
+    }
+
+    osnailyfacter::credentials_file { '/root/openrc':
+      admin_user      => $admin_user,
+      admin_password  => $admin_password,
+      admin_tenant    => $admin_tenant,
+      region_name     => $region,
+      auth_url        => $auth_uri,
+      murano_repo_url => $murano_repo_url,
+    }
+
+    if roles_include('primary-magnum') {
+
+      Package ['python-openstackclient']
+        -> Class['::osnailyfacter::wait_for_keystone_backends']
+          -> Class['::magnum::keystone::domain']
+
+      class { '::osnailyfacter::wait_for_keystone_backends': }
+
+      class { '::magnum::keystone::domain':
+        domain_name        => $domain_name,
+        domain_admin       => $domain_admin,
+        domain_admin_email => $domain_admin_email,
+        domain_password    => $domain_password,
+      }
+
+    }
   }
-
 }
