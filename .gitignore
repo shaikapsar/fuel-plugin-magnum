@@ -1,7 +1,7 @@
 .tox
 .build
 *.pyc
-*.rpm
-deployment_scripts/puppet/modules/magnum/*
-deployment_scripts/puppet/modules/oslo/*
-repositories/ubuntu/*.deb
+deployment_scripts/puppet/modules/magnum
+deployment_scripts/puppet/modules/oslo
+repositories/centos/*
+repositories/ubuntu/*
