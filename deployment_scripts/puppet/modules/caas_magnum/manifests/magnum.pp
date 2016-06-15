@@ -81,11 +81,6 @@ class caas_magnum::magnum {
     $cinder_endpoint_type       = pick($magnum['cinder_endpoint_type'], 'internalURL')
     $neutron_endpoint_type      = pick($magnum['neutron_endpoint_type'], 'internalURL')
 
-
-    $public_url                 = "${public_protocol}://${public_address}:${bind_port}/v1"
-    $internal_url               = "${internal_protocol}://${internal_address}:${bind_port}/v1"
-    $admin_url                  = "${admin_protocol}://${admin_address}:${bind_port}/v1"
-
     $db_user                    = pick($magnum['db_user'], 'magnum')
     $db_name                    = pick($magnum['db_name'], 'magnum')
     $db_password                = $magnum['db_password']
